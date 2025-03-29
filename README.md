@@ -1,5 +1,5 @@
 # GeoLens
-GeoLens is a cross-platform desktop and mobile application that allows users to explore any country using an interactive map.
+GeoLens is a desktop web application that allows users to explore any country using an interactive map.
 
 By leveraging various APIs, the app provides real-time demographic data, news updates, and weather forecasts for selected locations.
 
