@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gazetteer</title>
+
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="libs/images/favicon_io/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="libs/images/favicon_io/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="libs/images/favicon_io/favicon-16x16.png"
+    />
+    <link rel="manifest" href="libs/images/favicon_io/site.webmanifest" />
+
+    <link href="node_modules/leaflet/dist/leaflet.css" rel="stylesheet" />
+    <link href="node_modules/toastify-js/src/toastify.css" rel="stylesheet" />
+    <link
+      href="node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css"
+      rel="stylesheet"
+    />
+    <link
+      href="node_modules/leaflet.markercluster/dist/MarkerCluster.css"
+      rel="stylesheet"
+    />
+    <link
+      href="node_modules/leaflet-extra-markers/dist/css/leaflet.extra-markers.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="node_modules/bootstrap/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="node_modules/leaflet-easybutton/src/easy-button.css"
+      rel="stylesheet"
+    />
+    <link
+      href="node_modules/@fortawesome/fontawesome-free/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link href="libs/css/styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="preloader">
+      <div class="loading-text fw-bold">Loading your Country...</div>
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    <span id="selectContainer">
+      <select id="countrySelect" class="form-select shadow-sm">
+        <option>Select Country</option>
+      </select>
+    </span>
+
+    <div id="map"></div>
+
+    <div
+      id="geoLocationModal"
+      class="modal fade"
+      data-bs-backdrop="static"
+      tabindex="-1"
+    >
+      <div
+        class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+        style="max-width: 400px"
+      >
+        <div
+          class="modal-content shadow"
+          style="font-size: 0.9rem; word-wrap: break-word"
+        >
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Geo Location Information</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-street-view fa-xl text-primary"></i>
+                </td>
+                <td>Country Name</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="selectedCountry"></span>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-landmark fa-xl text-primary"></i>
+                </td>
+                <td>Capital City</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="capitalCity"></span>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-ruler-combined fa-xl text-primary"></i>
+                </td>
+                <td>Country Size</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countrySize"></span>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-globe fa-xl text-primary"></i>
+                </td>
+                <td>Continent</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countryContinent"></span>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-thumbtack fa-xl text-primary"></i>
+                </td>
+                <td>Latitude & Longitude</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="lat&lng"></span>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-map-marked-alt fa-xl text-primary"></i>
+                </td>
+                <td>Bordering Countries</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countryBorders"></span>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="currencyModal"
+      class="modal fade"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="currencyModalLabel"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">
+              <i class="fa-solid fa-money-bill-transfer me-2"></i>Currency
+              Calculator
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <form>
+              <div class="form-floating mb-3">
+                <input
+                  id="amount"
+                  type="number"
+                  class="form-control"
+                  value="1"
+                  min="1"
+                  step="1"
+                />
+                <label>From USD</label>
+              </div>
+              <div class="form-floating mb-3">
+                <select id="currencySelect" class="form-select"></select>
+                <label for="currencySelect">Convert to</label>
+              </div>
+              <div class="form-floating fw-bold">
+                <input
+                  id="convertedAmount"
+                  type="text"
+                  class="form-control"
+                  disabled
+                />
+                <label for="convertedAmount">Result</label>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      id="generalInfoModal"
+      class="modal fade"
+      data-bs-backdrop="static"
+      tabindex="-1"
+    >
+      <div
+        class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+        style="max-width: 400px"
+      >
+        <div
+          class="modal-content shadow"
+          style="font-size: 0.9rem; word-wrap: break-word"
+        >
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Regional Stats</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-venus-mars fa-xl text-primary"></i>
+                </td>
+                <td>Population</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countryPopulation"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-road fa-xl text-primary"></i>
+                </td>
+                <td>Road Side</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countryRoadSide"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-car fa-xl text-primary"></i>
+                </td>
+                <td>Speed Measurement</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countrySpeedMeasurement"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-hourglass-half fa-xl text-primary"></i>
+                </td>
+                <td>Current Date</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="currentDate"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-hourglass-half fa-xl text-primary"></i>
+                </td>
+                <td>Current Time</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countryCurrentTime"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-cloud-sun fa-xl text-primary"></i>
+                </td>
+                <td>Sun Rise</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countrySunRise"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-cloud-moon fa-xl text-primary"></i>
+                </td>
+                <td>Sun Set</td>
+                <td class="text-end">
+                  <span class="fw-bold" id="countrySunSet"></span>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="otherModal"
+      class="modal fade"
+      data-bs-backdrop="static"
+      tabindex="-1"
+    >
+      <div
+        class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+        style="max-width: 400px"
+      >
+        <div
+          class="modal-content shadow"
+          style="font-size: 0.9rem; word-wrap: break-word"
+        >
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">More Information</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="info-section">
+              <div class="d-flex align-items-center" style="padding-left: 1rem">
+                <img
+                  id="country-flag"
+                  src=""
+                  alt="Country Flag"
+                  class="img-fluid"
+                  style="width: 80px; height: 50px; object-fit: cover"
+                />
+                <h5 id="selectedCountryInfo" class="ms-3"></h5>
+              </div>
+            </div>
+            <div
+              class="info-item d-flex justify-content-between align-items-center"
+            >
+              <div class="value text-start" style="padding-bottom: 2rem">
+                <p
+                  id="countrySummary"
+                  style="padding: 1rem; padding-bottom: 0"
+                ></p>
+                <a
+                  id="countryWikiLink"
+                  target="_blank"
+                  style="padding: 1rem; padding-top: 0"
+                  >Read more..</a
+                >
+              </div>
+            </div>
+            <div class="d-flex align-items-center" style="padding-left: 1rem">
+              <img
+                id="country-thumbnail"
+                src=""
+                alt="Country Thumbnail"
+                class="img-fluid"
+                style="width: 80px; height: 50px; object-fit: cover"
+              />
+              <h5 id="selectedCity" class="ms-3"></h5>
+            </div>
+            <div
+              class="info-item d-flex justify-content-between align-items-center"
+            >
+              <div class="value text-start">
+                <p id="citySummary" style="padding: 1rem; margin: 0"></p>
+                <a
+                  id="cityWikiLink"
+                  target="_blank"
+                  style="padding: 1rem; padding-top: 0; margin: 0"
+                  >Read more..</a
+                >
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="newsModal"
+      class="modal fade"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">
+              Latest News in <span id="selectedCountryNews"></span>
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <table class="table table-borderless">
+              <tr>
+                <td rowspan="2" width="50%">
+                  <img id="firstNewsImg" class="img-fluid rounded" src="" />
+                </td>
+                <td>
+                  <a
+                    id="firstNewsLink"
+                    class="fw-bold fs-6 text-black"
+                    target="_blank"
+                    title=""
+                  >
+                    <span id="firstNewsTitle" class="fs-6"></span>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td class="align-bottom pb-0">
+                  <p class="fw-lighter fs-6 mb-1" id="firstNewsName"></p>
+                </td>
+              </tr>
+            </table>
+
+            <hr />
+
+            <table class="table table-borderless">
+              <tr>
+                <td rowspan="2" width="50%">
+                  <img id="secondNewsImg" class="img-fluid rounded" src="" />
+                </td>
+                <td>
+                  <a
+                    id="secondNewsLink"
+                    class="fw-bold fs-6 text-black"
+                    target="_blank"
+                    title=""
+                  >
+                    <span id="secondNewsTitle" class="fs-6"></span>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td class="align-bottom pb-0">
+                  <p class="fw-lighter fs-6 mb-1" id="secondNewsName"></p>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="WeatherModal"
+      class="modal fade"
+      data-bs-backdrop="static"
+      tabindex="-1"
+    >
+      <div
+        class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+        style="max-width: 400px"
+      >
+        <div
+          class="modal-content shadow"
+          style="font-size: 0.9rem; word-wrap: break-word"
+        >
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 style="margin-left: 0.5rem" class="modal-title">
+              Weather in <span id="selectedCountryWeather"></span>
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3 p-3 bg-light rounded">
+              <div class="d-flex justify-content-between align-items-center">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 1rem;
+                  "
+                >
+                  <div>
+                    <img
+                      id="country-flag-weather"
+                      src=""
+                      alt="Country Flag"
+                      class="img-fluid"
+                      style="width: 80px; height: 40px; object-fit: cover"
+                    />
+                  </div>
+                  <div>
+                    <h6>Today</h6>
+                    <h5
+                      class="text-primary fw-bold"
+                      id="weatherTempOne"
+                      style="margin-left: 0.85rem"
+                    ></h5>
+                  </div>
+                  <div style="margin-left: 1rem; margin-right: 0; padding: 0">
+                    <h6 class="fw-bold" id="weatherDescription"></h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div class="text-center" style="flex: 1">
+                <h6 id="weatherDateTwo"></h6>
+                <h6 class="text-primary fw-bold" id="weatherTempTwo"></h6>
+              </div>
+              <div class="text-center" style="flex: 1">
+                <h6 id="weatherDateThree"></h6>
+                <h6 class="text-primary fw-bold" id="weatherTempThree"></h6>
+              </div>
+              <div class="text-center" style="flex: 1">
+                <h6 id="weatherDateFour"></h6>
+                <h6 class="text-primary fw-bold" id="weatherTempFour"></h6>
+              </div>
+              <div class="text-center" style="flex: 1">
+                <h6 id="weatherDateFive"></h6>
+                <h6 class="text-primary fw-bold" id="weatherTempFive"></h6>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/leaflet/dist/leaflet.js"></script>
+    <script src="node_modules/toastify-js/src/toastify.js"></script>
+    <script src="node_modules/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <script src="node_modules/leaflet-extra-markers/dist/js/leaflet.extra-markers.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="node_modules/leaflet-easybutton/src/easy-button.js"></script>
+    <script src="node_modules/@fortawesome/fontawesome-free/js/all.min.js"></script>
+    <script src="node_modules/datejs/src/i18n-template.js"></script>
+    <script src="node_modules/numeral/numeral.js"></script>
+
+    <script src="libs/js/script.js"></script>
+  </body>
+</html>
