@@ -1,5 +1,5 @@
-# GeoLens
-GeoLens is a desktop web application that allows users to explore any country using an interactive map.
+# Gazetteer 
+Gazetteer is a desktop web application that allows users to explore any country using an interactive map.
 
 By leveraging various APIs, the app provides real-time demographic data, news updates, and weather forecasts for selected locations.
 
